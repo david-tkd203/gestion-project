@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+venv/
+
+# Django
+*.log
+staticfiles/
+media/
+db.sqlite3
+
+# Node
+node_modules/
+.history/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+!.env.example
+
+# Docker
+.postgres-data/
+
+# Temp
+*.tmp
+*.bak
+~$*.xlsx

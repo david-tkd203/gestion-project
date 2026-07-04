@@ -1,0 +1,10 @@
+node_modules
+.expo
+dist
+*.tsbuildinfo
+.env
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore

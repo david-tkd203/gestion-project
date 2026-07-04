@@ -1,0 +1,44 @@
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+
+# ─── Django ───
+staticfiles/
+*.sqlite3
+media/
+
+# ─── Environment ───
+.env
+!.env.example
+
+# ─── Node ───
+node_modules/
+frontend/dist/
+frontend/build/
+*.tsbuildinfo
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ─── IDE ───
+.vscode/
+.idea/
+*.sublime-workspace
+
+# ─── Docker ───
+.docker/
+
+# ─── Logs ───
+*.log

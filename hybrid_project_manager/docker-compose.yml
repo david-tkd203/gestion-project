@@ -1,0 +1,105 @@
+# ──────────────────────────────────────────────────────────
+# Hybrid PM System — Docker Compose
+# PostgreSQL 16 + Redis 7 + Django (ASGI) + Celery + Frontend
+# ──────────────────────────────────────────────────────────
+
+x-backend-env: &backend-env
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-change-in-prod}
+  DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*,backend,localhost}
+  CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:3000,http://localhost,http://backend:8000}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost,http://frontend:80}
+  DB_ENGINE: django.db.backends.postgresql
+  DB_NAME: hybrid_pm
+  DB_USER: hybrid_pm_user
+  DB_PASSWORD: ${DB_PASSWORD:-hybrid_pm_secret_2026}
+  DB_HOST: db
+  DB_PORT: "5432"
+  REDIS_URL: redis://redis:6379/0
+
+services:
+
+  # ─── PostgreSQL 16 ───
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: hybrid_pm
+      POSTGRES_USER: hybrid_pm_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-hybrid_pm_secret_2026}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hybrid_pm_user -d hybrid_pm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─── Redis 7 ───
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─── Django Backend (ASGI via Daphne) ───
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      <<: *backend-env
+      WORKER_TYPE: asgi
+    volumes:
+      - staticfiles:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── Celery Worker ───
+  celery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      WORKER_TYPE: celery
+      CELERY_CONCURRENCY: ${CELERY_CONCURRENCY:-4}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
+  # ─── Frontend (React Native Web / SPA) ───
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  redisdata:
+  staticfiles:
