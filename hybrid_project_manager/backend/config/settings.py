@@ -151,8 +151,8 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False") == "True"
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False") == "True"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "VINCULO <noreply@vinculosync.tech>")
-SERVER_EMAIL = os.getenv("SERVER_EMAIL", "noreply@vinculosync.tech")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "VINCULO <noreply@hagamostkd.com>")
+SERVER_EMAIL = os.getenv("SERVER_EMAIL", "noreply@hagamostkd.com")
 
 # ─── Base URL for email links ───
 BASE_URL = os.getenv("BASE_URL", "https://vinculo-sync.codigomaison.com")
