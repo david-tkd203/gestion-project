@@ -29,11 +29,14 @@ def initialize_platform():
         logger.warning("DB not ready yet — skipping startup init")
         return
 
-    # Guard: only run if admin superuser still exists (flag that init hasn't run)
-    admin_user = User.objects.filter(username="admin", is_superuser=True).first()
-    if not admin_user:
-        logger.info("Startup init already completed (admin user not found)")
-        return
+    # Guard: only run once — check if target users already have roles assigned
+    from .models import UserProfile
+    david_user = User.objects.filter(email="david.203.52@gmail.com").first()
+    if david_user:
+        profile = UserProfile.objects.filter(user=david_user).first()
+        if profile and profile.role == UserProfile.Role.ARQUITECTO:
+            logger.info("Startup init already completed (users have roles)")
+            return
 
     logger.info("=== Running startup initialization ===")
 
@@ -81,10 +84,12 @@ def initialize_platform():
     except Exception as e:
         logger.warning("Could not send welcome emails: %s", e)
 
-    # ─── Remove admin superuser ───
+    # ─── Remove admin superuser if exists ───
     try:
-        admin_user.delete()
-        logger.info("Admin superuser deleted successfully")
+        admin = User.objects.filter(username="admin", is_superuser=True).first()
+        if admin:
+            admin.delete()
+            logger.info("Admin superuser deleted successfully")
     except Exception as e:
         logger.warning("Could not delete admin user: %s", e)
 
