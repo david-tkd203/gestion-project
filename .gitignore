@@ -31,7 +31,7 @@ Thumbs.db
 # Docker
 .postgres-data/
 
-# Temp
-*.tmp
-*.bak
-~$*.xlsx
+# Documents (keep local, not in repo)
+*.xlsx
+*.pdf
+*.sqlite3
