@@ -1,0 +1,51 @@
+<mjml>
+  <mj-head>
+    <mj-attributes><mj-all font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" /></mj-attributes>
+    <mj-preview>Recordatorio: Sprint {{sprint_name}} termina pronto</mj-preview>
+    <mj-title>El sprint {{sprint_name}} termina en {{days_left}} días</mj-title>
+    <mj-style inline="inline">
+      .brand { font-size: 20px; font-weight: 700; color: #0f172a; }
+      .brand span { color: #2563eb; }
+      .warning-box { background: #fef3c7; border-radius: 8px; padding: 16px; }
+      .progress-bar { background: #e2e8f0; border-radius: 4px; height: 8px; }
+      .progress-fill { background: #2563eb; border-radius: 4px; height: 8px; }
+      .footer-text { color: #94a3b8; font-size: 12px; line-height: 1.6; }
+    </mj-style>
+  </mj-head>
+
+  <mj-body background-color="#f1f5f9" width="600px">
+    <mj-section padding="20px 0 0">
+      <mj-column><mj-text align="center" padding="16px 24px"><span class="brand">VINC<span>U</span>LO</span></mj-text></mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" border-radius="12px" padding="0">
+      <mj-column padding="40px 32px">
+        <mj-text align="center" font-size="36px" padding="0">&#9200;</mj-text>
+        <mj-text align="center" font-size="22px" font-weight="700" color="#92400e" padding="8px 0">El sprint termina pronto</mj-text>
+        <mj-text align="center" font-size="16px" color="#0f172a" padding="0 0 24px 0">
+          <strong>{{sprint_name}}</strong> &middot; {{project}}
+        </mj-text>
+
+        <mj-table>
+          <tr><td style="padding: 4px 0;"><strong>Tareas pendientes:</strong></td><td style="text-align: right; color: #dc2626;">{{pending_tasks}}</td></tr>
+          <tr><td style="padding: 4px 0;"><strong>Completadas:</strong></td><td style="text-align: right; color: #16a34a;">{{completed_tasks}}</td></tr>
+          <tr><td style="padding: 4px 0;"><strong>Progreso:</strong></td><td style="text-align: right;">{{completion_pct}}%</td></tr>
+          <tr><td style="padding: 4px 0;"><strong>Días restantes:</strong></td><td style="text-align: right; font-weight: 700;">{{days_left}} días</td></tr>
+        </mj-table>
+
+        <mj-divider border-width="1px" border-color="#e2e8f0" padding="16px 0" />
+
+        <mj-text font-size="14px" color="#64748b" line-height="1.6">
+          Tareas que aún necesitan atención:
+        </mj-text>
+        <mj-text font-size="14px" color="#475569" line-height="1.8">{{pending_list}}</mj-text>
+
+        <mj-button href="{{base_url}}/sprints/{{sprint_id}}" align="center" padding="24px 0 0 0">Ver progreso</mj-button>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="16px 0 32px 0">
+      <mj-column><mj-text align="center" css-class="footer-text"><p>VINCULO &copy; 2026</p></mj-text></mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

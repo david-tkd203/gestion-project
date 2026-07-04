@@ -1,0 +1,67 @@
+<mjml>
+  <mj-head>
+    <mj-attributes><mj-all font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" /></mj-attributes>
+    <mj-preview>Resumen diario de {{project}} — {{date}}</mj-preview>
+    <mj-title>Resumen diario — {{date}}</mj-title>
+    <mj-style inline="inline">
+      .brand { font-size: 20px; font-weight: 700; color: #0f172a; }
+      .brand span { color: #2563eb; }
+      .stat { text-align: center; }
+      .stat-num { font-size: 28px; font-weight: 700; }
+      .stat-label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+      .stat-done .stat-num { color: #16a34a; }
+      .stat-pending .stat-num { color: #d97706; }
+      .stat-progress .stat-num { color: #2563eb; }
+      .item { border-bottom: 1px solid #f1f5f9; padding: 8px 0; }
+      .item:last-child { border-bottom: 0; }
+      .footer-text { color: #94a3b8; font-size: 12px; line-height: 1.6; }
+    </mj-style>
+  </mj-head>
+
+  <mj-body background-color="#f1f5f9" width="600px">
+    <mj-section padding="20px 0 0">
+      <mj-column><mj-text align="center" padding="16px 24px"><span class="brand">VINC<span>U</span>LO</span></mj-text></mj-column>
+    </mj-section>
+
+    <mj-section background-color="#ffffff" border-radius="12px 12px 0 0" padding="0">
+      <mj-column padding="32px 32px 16px 32px">
+        <mj-text font-size="22px" font-weight="700" color="#0f172a">Resumen diario</mj-text>
+        <mj-text font-size="14px" color="#64748b" padding="4px 0">{{project}} &middot; {{date}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Stats -->
+    <mj-section background-color="#ffffff" padding="0">
+      <mj-column width="33%" padding="0 8px 16px 32px">
+        <mj-text css-class="stat stat-done">
+          <div class="stat-num">{{completed_today}}</div>
+          <div class="stat-label">Completadas</div>
+        </mj-text>
+      </mj-column>
+      <mj-column width="33%" padding="0 8px 16px 8px">
+        <mj-text css-class="stat stat-progress">
+          <div class="stat-num">{{in_progress}}</div>
+          <div class="stat-label">En progreso</div>
+        </mj-text>
+      </mj-column>
+      <mj-column width="33%" padding="0 32px 16px 8px">
+        <mj-text css-class="stat stat-pending">
+          <div class="stat-num">{{pending}}</div>
+          <div class="stat-label">Pendientes</div>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Activity -->
+    <mj-section background-color="#ffffff" padding="0" border-radius="0 0 12px 12px">
+      <mj-column padding="0 32px 32px 32px">
+        <mj-text font-size="14px" font-weight="600" color="#0f172a" padding="8px 0">Actividad reciente</mj-text>
+        {{activity_list}}
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="16px 0 32px 0">
+      <mj-column><mj-text align="center" css-class="footer-text"><p>VINCULO &copy; 2026</p></mj-text></mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

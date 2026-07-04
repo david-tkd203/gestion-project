@@ -1,0 +1,11 @@
+{
+  "name": "vinculomaster-emails",
+  "private": true,
+  "scripts": {
+    "build:emails": "for f in templates/emails/mjml/*.mjml; do base=$(basename \"$f\" .mjml); [ \"$base\" != \"_$(echo $base | cut -c1)\" ] && mjml \"$f\" -o \"templates/emails/html/$base.html\"; done",
+    "watch:emails": "nodemon --ext mjml --exec \"npm run build:emails\""
+  },
+  "devDependencies": {
+    "mjml": "^4.15.0"
+  }
+}
