@@ -21,10 +21,8 @@ def initialize_platform():
     4. Removes the admin superuser
     """
     try:
-        # Guard: check if the DB is ready and tables exist
-        if not User.objects.exists():
-            logger.info("No users yet — skipping startup init (DB likely empty)")
-            return
+        # Check if tables exist — count users just to test DB readiness
+        User.objects.count()
     except (OperationalError, ProgrammingError):
         logger.warning("DB not ready yet — skipping startup init")
         return
