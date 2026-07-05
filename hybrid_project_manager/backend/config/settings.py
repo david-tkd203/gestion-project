@@ -135,6 +135,12 @@ WEEK_MAPPING = {
     "diciembre s1": (12, 1), "diciembre s2": (12, 2), "diciembre s3": (12, 3), "diciembre s4": (12, 4),
 }
 
+# ─── Password validation ───
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+]
+
 LANGUAGE_CODE = "es-cl"
 TIME_ZONE = "America/Santiago"
 USE_I18N = True

@@ -11,6 +11,7 @@ const SprintStatus = lazy(() => import('./pages/SprintStatus'));
 const Gantt = lazy(() => import('./pages/Gantt'));
 const SprintFlow = lazy(() => import('./pages/SprintFlow'));
 const Login = lazy(() => import('./pages/Login'));
+const ChangePassword = lazy(() => import('./pages/ChangePassword'));
 const BpmnPage = lazy(() => import('./pages/BpmnPage'));
 const GameMapPage = lazy(() => import('./pages/GameMapPage'));
 const GitHubPage = lazy(() => import('./pages/GitHubPage'));
@@ -76,6 +77,7 @@ export default function App() {
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/login" element={isAuthed() ? <Navigate to="/" replace /> : <Login />} />
+          <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/*" element={<ProtectedRoute><Layout /></ProtectedRoute>} />
         </Routes>
       </Suspense>

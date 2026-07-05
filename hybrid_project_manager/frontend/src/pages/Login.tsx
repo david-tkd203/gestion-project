@@ -23,7 +23,15 @@ export default function Login() {
     try {
       const data = await login(user, pass);
       localStorage.setItem('access_token', data.access);
-      nav('/');
+      // Check if password change is required
+      const me = await (await fetch('/api/me/', {
+        headers: { Authorization: 'Bearer ' + data.access }
+      })).json();
+      if (me.must_change_password) {
+        nav('/change-password');
+      } else {
+        nav('/');
+      }
     } catch (err: any) { setError(err.message || 'Error al iniciar sesion'); }
     finally { setLoading(false); }
   };

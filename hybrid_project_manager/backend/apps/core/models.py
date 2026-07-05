@@ -143,6 +143,10 @@ class UserProfile(models.Model):
         choices=Role.choices,
         default=Role.LECTOR
     )
+    must_change_password = models.BooleanField(
+        default=False,
+        help_text="Force password change on next login"
+    )
 
     def __str__(self):
         return f"{self.user.username} — {self.get_role_display()}"

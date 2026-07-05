@@ -47,9 +47,11 @@ def _send_template(template_name: str, subject: str, to: list[str], context: dic
 # ─── APIs públicas ───
 
 
-def send_welcome(to: str, name: str, email: str) -> int:
-    return _send_template("welcome", "Bienvenido a VINCULO", [to], {
-        "name": name, "email": email,
+def send_welcome(to: str, name: str, email: str, username: str = "",
+                 password: str = "", role: str = "Lector") -> int:
+    return _send_template("welcome", "Bienvenido a VINCULOmaster", [to], {
+        "name": name, "email": email, "username": username,
+        "password": password, "role": role,
     })
 
 

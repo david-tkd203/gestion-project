@@ -38,7 +38,44 @@ class MeView(APIView):
             "nombre_completo": f"{user.first_name} {user.last_name}".strip(),
             "role": profile.role if profile else "lector",
             "is_admin": profile.is_admin if profile else False,
+            "must_change_password": profile.must_change_password if profile else False,
         })
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        old_password = request.data.get("old_password", "")
+        new_password = request.data.get("new_password", "")
+
+        # Verify old password
+        if not user.check_password(old_password):
+            return Response({"error": "Contrasena actual incorrecta"}, status=400)
+
+        # Validate strength
+        if len(new_password) < 8:
+            return Response({"error": "Debe tener al menos 8 caracteres"}, status=400)
+        if not any(c.isupper() for c in new_password):
+            return Response({"error": "Debe incluir una mayuscula"}, status=400)
+        if not any(c.islower() for c in new_password):
+            return Response({"error": "Debe incluir una minuscula"}, status=400)
+        if not any(c.isdigit() for c in new_password):
+            return Response({"error": "Debe incluir un numero"}, status=400)
+        if not any(c in "!@#$%^&*()_+-=[]{}|;':\",./<>?`~" for c in new_password):
+            return Response({"error": "Debe incluir un simbolo (!@#$%...)"}, status=400)
+
+        user.set_password(new_password)
+        user.save()
+
+        # Clear must_change_password flag
+        profile = getattr(user, 'profile', None)
+        if profile:
+            profile.must_change_password = False
+            profile.save(update_fields=["must_change_password"])
+
+        return Response({"ok": True, "message": "Contrasena actualizada correctamente"})
 
 from .models import Proyecto, Sprint, Area, Tarea, Evento
 from .serializers import (
