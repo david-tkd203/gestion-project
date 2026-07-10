@@ -2,8 +2,7 @@ import { useState, createContext, useContext, Suspense, lazy, useEffect, useRef 
 import { Routes, Route, Navigate, useLocation, NavLink } from 'react-router-dom';
 import anime from 'animejs';
 import { isAuthed, logout, MeUser, getMe } from './api';
-import { LayoutDashboard, KanbanIcon, TrendingUp, Calendar, LogOut, DiagramIcon, GitBranch, Loader2, MapPin, Play } from './icons';
-import HelpOverlay from './components/HelpOverlay';
+import { LayoutDashboard, KanbanIcon, TrendingUp, Calendar, LogOut, DiagramIcon, GitBranch, Loader2, MapPin } from './icons';
 import ThreeBackground from './ThreeBackground';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -16,7 +15,6 @@ const ChangePassword = lazy(() => import('./pages/ChangePassword'));
 const BpmnPage = lazy(() => import('./pages/BpmnPage'));
 const GameMapPage = lazy(() => import('./pages/GameMapPage'));
 const GitHubPage = lazy(() => import('./pages/GitHubPage'));
-const ShiftStart = lazy(() => import('./pages/ShiftStart'));
 
 interface AuthCtx {
   token: string | null;
@@ -74,13 +72,12 @@ export default function App() {
   }, [token]);
   return (
     <AuthContext.Provider value={{ token, setToken: actualSetToken, me, setMe }}>
-      {/* ThreeBackground only when logged in (not on fullscreen pages) */}
+      {/* ThreeBackground only when logged in */}
       {isAuthed() && <ThreeBackground color="#0d9488" />}
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/login" element={isAuthed() ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/change-password" element={<ChangePassword />} />
-          <Route path="/turno" element={<ShiftStart />} />
           <Route path="/*" element={<ProtectedRoute><Layout /></ProtectedRoute>} />
         </Routes>
       </Suspense>
@@ -89,7 +86,6 @@ export default function App() {
 }
 
 function Layout() {
-  const loc = useLocation();
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/kanban', label: 'Kanban', icon: KanbanIcon },
@@ -99,7 +95,6 @@ function Layout() {
     { to: '/bpmn', label: 'BPMN', icon: DiagramIcon },
     { to: '/mapa', label: 'Mapa', icon: MapPin },
     { to: '/github', label: 'GitHub', icon: GitBranch },
-    { to: '/turno', label: 'Iniciar Turno', icon: Play },
   ];
 
   return (
@@ -138,12 +133,10 @@ function Layout() {
               <Route path="/bpmn" element={<BpmnPage />} />
               <Route path="/mapa" element={<GameMapPage />} />
               <Route path="/github" element={<GitHubPage />} />
-              <Route path="/turno" element={<ShiftStart />} />
             </Routes>
           </PageTransition>
         </Suspense>
       </main>
-      <HelpOverlay currentPath={loc.pathname} />
     </div>
   );
 }
