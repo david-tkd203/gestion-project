@@ -1,10 +1,7 @@
 """
 Startup initialization — runs once when the Django server starts.
-Creates initial users, generates passwords, sends credentials email
-with must_change_password flag, and removes the admin superuser.
+Ensures initial users exist with predictable dev passwords and configured roles.
 """
-import secrets
-import string
 import logging
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -16,28 +13,6 @@ User = get_user_model()
 
 CACHE_KEY = "vinculo_startup_init_done"
 
-
-def _generate_password(length=14):
-    """Generate a secure random password with all character types."""
-    uppercase = string.ascii_uppercase
-    lowercase = string.ascii_lowercase
-    digits = string.digits
-    symbols = "!@#$%^&*()_+-=[]{}|;':,./<>?`~"
-
-    # Ensure at least one of each type
-    chars = [
-        secrets.choice(uppercase),
-        secrets.choice(lowercase),
-        secrets.choice(digits),
-        secrets.choice(symbols),
-    ]
-    # Fill the rest with random
-    all_chars = uppercase + lowercase + digits + symbols
-    chars.extend(secrets.choice(all_chars) for _ in range(length - 4))
-    secrets.SystemRandom().shuffle(chars)
-    return "".join(chars)
-
-
 ROLE_LABELS = {
     "director": "Director de Proyecto",
     "arquitecto": "Arquitecto y Desarrollo Tecnico",
@@ -47,11 +22,8 @@ ROLE_LABELS = {
 
 def initialize_platform():
     """
-    One-time initialization:
-    1. Creates users with random passwords
-    2. Sets must_change_password=True
-    3. Emails credentials to each user
-    4. Removes the admin superuser
+    Initializes platform users and roles.
+    Ensures 'admin' (director) and 'david' (arquitecto) exist and are ready for use.
     """
     if cache.get(CACHE_KEY):
         logger.info("Startup init already completed (cache flag)")
@@ -68,59 +40,48 @@ def initialize_platform():
     from .models import UserProfile
 
     team = [
-        {"email": "david.203.52@gmail.com", "username": "david", "name": "David", "role": "arquitecto"},
-        {"email": "bduran@estudiante.uc.cl", "username": "benjamin", "name": "Benjamin", "role": "director"},
+        {
+            "username": "admin",
+            "email": "admin@vinculopm.local",
+            "name": "Administrador",
+            "password": "admin123",
+            "role": "director",
+            "is_superuser": True,
+            "is_staff": True,
+        },
+        {
+            "username": "david",
+            "email": "david.203.52@gmail.com",
+            "name": "David",
+            "password": "david123",
+            "role": "arquitecto",
+            "is_superuser": False,
+            "is_staff": True,
+        },
     ]
 
     for member in team:
-        user, _ = User.objects.get_or_create(
+        user, created = User.objects.get_or_create(
             username=member["username"],
             defaults={
                 "email": member["email"],
                 "first_name": member["name"],
-                "is_staff": True,
+                "is_staff": member["is_staff"],
+                "is_superuser": member["is_superuser"],
             },
         )
-        if user.email != member["email"] or user.first_name != member["name"] or not user.is_staff:
-            user.email = member["email"]
-            user.first_name = member["name"]
-            user.is_staff = True
-            user.save(update_fields=["email", "first_name", "is_staff"])
+        if created or settings.DEBUG:
+            user.set_password(member["password"])
+            user.is_staff = member["is_staff"]
+            user.is_superuser = member["is_superuser"]
+            user.save()
 
-        # Generate password + set must_change
-        password = _generate_password()
-        user.set_password(password)
-        user.save(update_fields=["password"])
-
-        # Set role + must_change_password flag
         profile, _ = UserProfile.objects.get_or_create(user=user)
         profile.role = member["role"]
-        profile.must_change_password = True
+        profile.must_change_password = False
         profile.save(update_fields=["role", "must_change_password"])
 
-        # ─── Send welcome email with credentials ───
-        try:
-            from .mail_service import send_welcome
-            send_welcome(
-                to=user.email,
-                name=user.first_name,
-                email=user.email,
-                username=user.username,
-                password=password,
-                role=ROLE_LABELS.get(member["role"], member["role"]),
-            )
-            logger.info("Welcome email sent to %s (%s)", user.email, user.username)
-        except Exception as e:
-            logger.warning("Could not send welcome email to %s: %s", user.email, e)
-
-    # ─── Remove admin superuser if exists ───
-    try:
-        admin = User.objects.filter(username="admin", is_superuser=True).first()
-        if admin:
-            admin.delete()
-            logger.info("Admin superuser deleted successfully")
-    except Exception as e:
-        logger.warning("Could not delete admin user: %s", e)
+        logger.info("Ready user: %s (role: %s)", user.username, profile.role)
 
     cache.set(CACHE_KEY, True, timeout=None)
     logger.info("=== Startup initialization complete ===")

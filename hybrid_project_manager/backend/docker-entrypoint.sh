@@ -16,7 +16,9 @@ echo "✅ Redis is ready"
 # ─── Auto-migration ───
 echo "🗃️  Running migrate..."
 python manage.py migrate --noinput
-python manage.py migrate --noinput
+
+echo "👤 Seeding initial users..."
+python manage.py seed_users || true
 
 echo "📂 Collecting static files..."
 python manage.py collectstatic --noinput --clear 2>/dev/null || true
