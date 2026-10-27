@@ -79,9 +79,9 @@ class ImportResult:
 
     def __str__(self):
         return (
-            f"✅ {self.tareas_creadas} tareas, {self.sprints_creados} sprints, "
+            f"[OK] {self.tareas_creadas} tareas, {self.sprints_creados} sprints, "
             f"{self.dependencias_resueltas} deps resueltas"
-            + (f", ⚠️ {self.dependencias_fallidas} deps fallidas" if self.dependencias_fallidas else "")
+            + (f", [WARN] {self.dependencias_fallidas} deps fallidas" if self.dependencias_fallidas else "")
             + (f", {len(self.usuarios_no_encontrados)} usuarios no match" if self.usuarios_no_encontrados else "")
         )
 
@@ -371,6 +371,10 @@ def import_excel(file_path: str, proyecto_nombre: str = "VINCULOsync") -> Import
             except (ValueError, TypeError):
                 completitud_pct = 0
 
+            # Task duration = sprint duration by default, can be overridden
+            start_date = sprint.fecha_inicio
+            end_date = sprint.fecha_fin
+
             # ─── Parse dates from Excel columns (override sprint defaults) ───
             task_start = _parse_date(fecha_ini_raw)
             task_end = _parse_date(fecha_fin_raw)
@@ -390,11 +394,6 @@ def import_excel(file_path: str, proyecto_nombre: str = "VINCULOsync") -> Import
 
             if responsable_nombre and not responsable:
                 result.usuarios_no_encontrados.append(responsable_nombre)
-
-            # Parse duration from sprint dates
-            # Task duration = sprint duration by default, can be overridden
-            start_date = sprint.fecha_inicio
-            end_date = sprint.fecha_fin
 
             # Calculate duration in days
             duration = (end_date - start_date).days + 1 if start_date and end_date else 14

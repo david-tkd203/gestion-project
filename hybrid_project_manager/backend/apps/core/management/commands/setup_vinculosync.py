@@ -36,9 +36,13 @@ class Command(BaseCommand):
 
         if not file_path:
             # Default search locations
+            base_dir = os.path.dirname(os.path.abspath(__file__))
             candidates = [
                 os.path.join("data", "Tareas_VINCULOsync_FINAL.xlsx"),
-                os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "Tareas_VINCULOsync_FINAL.xlsx"),
+                os.path.join("backend", "data", "Tareas_VINCULOsync_FINAL.xlsx"),
+                os.path.join(base_dir, "..", "..", "..", "..", "data", "Tareas_VINCULOsync_FINAL.xlsx"),
+                os.path.join(base_dir, "..", "..", "..", "data", "Tareas_VINCULOsync_FINAL.xlsx"),
+                os.path.join("/app", "data", "Tareas_VINCULOsync_FINAL.xlsx"),
                 os.path.join("..", "Tareas_VINCULOsync_FINAL.xlsx"),
             ]
             for cand in candidates:
@@ -50,11 +54,27 @@ class Command(BaseCommand):
         if not file_path or not os.path.exists(file_path):
             raise CommandError(f"Excel file not found. Please provide --file path.")
 
-        self.stdout.write(self.style.NOTICE(f"Importing Excel data from {file_path}..."))
-        result = import_excel(file_path, proyecto_nombre=project_name)
-        self.stdout.write(self.style.SUCCESS(f"  [OK] Excel imported: {result}"))
+        # Ensure target project is uniquely matched or adopted
+        proyecto = Proyecto.objects.filter(nombre__iexact=project_name).first()
+        if not proyecto and Proyecto.objects.count() == 1:
+            proyecto = Proyecto.objects.first()
+            proyecto.nombre = project_name
+            proyecto.save(update_fields=["nombre"])
+        elif not proyecto:
+            proyecto, _ = Proyecto.objects.get_or_create(
+                nombre=project_name, defaults={"budget": 812500.00}
+            )
 
-        proyecto = Proyecto.objects.get(nombre=project_name)
+        self.stdout.write(self.style.NOTICE(f"Importing Excel data from {file_path} into '{proyecto.nombre}'..."))
+        result = import_excel(file_path, proyecto_nombre=proyecto.nombre)
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"  [OK] Excel imported: {result.tareas_creadas} tasks, {result.sprints_creados} sprints, "
+                f"{result.dependencias_resueltas} deps resolved"
+            )
+        )
+
+        proyecto.refresh_from_db()
 
         # Parse repo
         parts = repo_full.split("/")

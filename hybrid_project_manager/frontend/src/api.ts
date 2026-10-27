@@ -57,8 +57,15 @@ export const getSprintStatus = (id: string) =>
   request<any>(`/dashboard/sprint-status/${id}/`);
 
 // ─── Tareas ───
-export const getTareas = (params?: string) =>
-  request<any>('/tareas/' + (params || '')).then((r: any) => r.results || r);
+export const getTareas = (params?: string) => {
+  let query = params || '';
+  if (!query) {
+    query = '?page_size=500';
+  } else if (!query.includes('page_size=')) {
+    query += (query.includes('?') ? '&' : '?') + 'page_size=500';
+  }
+  return request<any>('/tareas/' + query).then((r: any) => r.results || r);
+};
 
 export const updateTareaStatus = (id: string, status: string) =>
   request<any>(`/tareas/${id}/status/`, {

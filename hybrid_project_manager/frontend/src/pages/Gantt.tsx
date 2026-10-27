@@ -15,7 +15,10 @@ export default function Gantt() {
   useEffect(() => {
     getProyectos().then(p => {
       setProyectos(p);
-      if (p.length > 0) setSelected(p[0].id);
+      if (p.length > 0) {
+        const target = p.find((proj: any) => proj.nombre?.toLowerCase().includes('vinculo')) || p[0];
+        setSelected(target.id);
+      }
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
 

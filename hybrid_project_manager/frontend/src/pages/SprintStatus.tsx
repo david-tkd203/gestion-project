@@ -42,7 +42,8 @@ export default function SprintStatus() {
     try {
       const projsResp = await fetch('/api/proyectos/', { headers: { Authorization: 'Bearer ' + localStorage.getItem('access_token') } });
       const projs = await projsResp.json();
-      const firstProj = projs.results?.[0] || projs?.[0];
+      const projList = projs.results || projs || [];
+      const firstProj = projList.find((p: any) => p.nombre?.toLowerCase().includes('vinculo')) || projList[0];
       const s = firstProj ? await getSprints(firstProj.id) : await getSprints();
       setSprints(s);
       if (!id && s.length > 0) setSelected(s[0].id);
@@ -69,6 +70,7 @@ export default function SprintStatus() {
   const progressRef = useCountUp(data?.summary?.progress_pct || 0, [data?.summary?.progress_pct]);
   const timeRef = useCountUp(data?.summary?.time_progress_pct || 0, [data?.summary?.time_progress_pct]);
   const doneRef = useCountUp(data?.summary?.done_tasks || 0, [data?.summary?.done_tasks]);
+  const totalRef = useCountUp(data?.summary?.total_tasks || 0, [data?.summary?.total_tasks]);
   const blockedRef = useCountUp(data?.summary?.blocked_count || 0, [data?.summary?.blocked_count]);
   const acceptRef = useCountUp(data?.summary?.acceptance_progress_pct || 0, [data?.summary?.acceptance_progress_pct]);
 
@@ -124,8 +126,8 @@ export default function SprintStatus() {
               <div className="stat-label">Tiempo</div>
             </div>
             <div className="metric-cell" style={{ gridArea: 'tareas' }}>
-              <div className="stat-value" ref={doneRef} style={{ color: 'var(--purple)' }}>0</div>
-              <div className="stat-label">Tareas</div>
+              <div className="stat-value" ref={totalRef} style={{ color: 'var(--purple)' }}>0</div>
+              <div className="stat-label">Tareas ({data?.summary?.done_tasks || 0} completadas)</div>
             </div>
             <div className="metric-cell" style={{ gridArea: 'bloqueadas' }}>
               <div className="stat-value" ref={blockedRef} style={{ color: (data?.summary?.blocked_count || 0) > 0 ? 'var(--red)' : 'var(--text3)' }}>0</div>

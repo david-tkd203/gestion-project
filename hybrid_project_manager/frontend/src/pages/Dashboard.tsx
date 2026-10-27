@@ -43,8 +43,14 @@ export default function Dashboard() {
 
   const load = async () => {
     try {
-      const [p, s, t] = await Promise.all([getProyectos(), getSprints(), getTareas()]);
-      setProyectos(p);
+      const p = await getProyectos();
+      const projList = p || [];
+      const targetProj = projList.find((pr: any) => pr.nombre?.toLowerCase().includes('vinculo')) || projList[0];
+      const [s, t] = await Promise.all([
+        targetProj ? getSprints(targetProj.id) : getSprints(),
+        targetProj ? getTareas(`?proyecto=${targetProj.id}`) : getTareas(),
+      ]);
+      setProyectos(projList);
       setSprints(s);
       setTareas(t);
       setTimeout(() => {
@@ -330,7 +336,7 @@ export default function Dashboard() {
                   <td>{s.nombre}</td>
                   <td>{s.fecha_inicio}</td>
                   <td>{s.fecha_fin}</td>
-                  <td>{s.task_count || '—'}</td>
+                  <td>{s.task_count != null ? s.task_count : '—'}</td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div className="progress-bar" style={{ flex: 1, maxWidth: 100 }}>

@@ -27,10 +27,11 @@ export default function SprintFlow() {
     (async () => {
       const projsResp = await fetch('/api/proyectos/', { headers: { Authorization: 'Bearer ' + localStorage.getItem('access_token') } });
       const projs = await projsResp.json();
-      const firstProj = projs.results?.[0] || projs?.[0];
+      const projList = projs.results || projs || [];
+      const firstProj = projList.find((p: any) => p.nombre?.toLowerCase().includes('vinculo')) || projList[0];
       const [s, t] = await Promise.all([
         firstProj ? getSprints(firstProj.id) : getSprints(),
-        getTareas()
+        firstProj ? getTareas(`?proyecto=${firstProj.id}`) : getTareas()
       ]);
       setSprints(s); setTareas(t);
       if (s.length > 0) setSelSprint(s[0].id);
