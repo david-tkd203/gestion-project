@@ -2,7 +2,7 @@ import { useState, createContext, useContext, Suspense, lazy, useEffect, useRef 
 import { Routes, Route, Navigate, useLocation, NavLink } from 'react-router-dom';
 import anime from 'animejs';
 import { isAuthed, logout, MeUser, getMe } from './api';
-import { LayoutDashboard, KanbanIcon, TrendingUp, Calendar, LogOut, DiagramIcon, GitBranch, Loader2, MapPin } from './icons';
+import { LayoutDashboard, KanbanIcon, TrendingUp, Calendar, LogOut, DiagramIcon, GitBranch, Loader2, MapPin, MessageSquare } from './icons';
 import ThreeBackground from './ThreeBackground';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -15,6 +15,7 @@ const ChangePassword = lazy(() => import('./pages/ChangePassword'));
 const BpmnPage = lazy(() => import('./pages/BpmnPage'));
 const GameMapPage = lazy(() => import('./pages/GameMapPage'));
 const GitHubPage = lazy(() => import('./pages/GitHubPage'));
+const PendientesPage = lazy(() => import('./pages/PendientesPage'));
 
 interface AuthCtx {
   token: string | null;
@@ -89,6 +90,7 @@ function Layout() {
   const navItems = [
     { to: '/', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/kanban', label: 'Kanban', icon: KanbanIcon },
+    { to: '/pendientes', label: 'Pendientes', icon: MessageSquare },
     { to: '/sprint', label: 'Sprint Status', icon: TrendingUp },
     { to: '/flow', label: 'Cronograma', icon: Calendar },
     { to: '/gantt', label: 'Gantt', icon: GitBranch },
@@ -126,6 +128,7 @@ function Layout() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/kanban" element={<Kanban />} />
+              <Route path="/pendientes" element={<PendientesPage />} />
               <Route path="/sprint" element={<SprintStatus />} />
               <Route path="/sprint/:id" element={<SprintStatus />} />
               <Route path="/flow" element={<SprintFlow />} />

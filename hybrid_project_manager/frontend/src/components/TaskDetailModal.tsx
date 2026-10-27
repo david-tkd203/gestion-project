@@ -1,15 +1,17 @@
 import { useEffect, useState, useRef } from 'react';
 import anime from 'animejs';
 import { getTareaDetail, unblockTarea, updateCriterios } from '../api';
-import { X, Lock, AlertTriangle, Users, FileText } from '../icons';
+import { X, Lock, AlertTriangle, Users, FileText, Edit3, Trash2 } from '../icons';
 import { useMe } from '../App';
 
 interface TaskDetailModalProps {
   taskId: string | null;
   onClose: () => void;
+  onEdit?: (task: any) => void;
+  onDelete?: (taskId: string) => void;
 }
 
-export default function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
+export default function TaskDetailModal({ taskId, onClose, onEdit, onDelete }: TaskDetailModalProps) {
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -180,6 +182,28 @@ export default function TaskDetailModal({ taskId, onClose }: TaskDetailModalProp
                 Solo el Director o el Arquitecto pueden modificar esta tarea
               </div>
             )}
+            {/* Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+              {onDelete && (
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => onDelete(task.id)}
+                  style={{ color: 'var(--red)', marginRight: 'auto' }}
+                >
+                  <Trash2 /> Eliminar Tarea
+                </button>
+              )}
+              {onEdit && (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => onEdit(task)}
+                >
+                  <Edit3 /> Editar Tarea
+                </button>
+              )}
+            </div>
           </>
         ) : (
           <div style={{ textAlign: 'center', padding: 40, color: 'var(--text2)' }}>Tarea no encontrada</div>

@@ -421,6 +421,16 @@ def import_excel(
             # Calculate duration in days
             duration = (end_date - start_date).days + 1 if start_date and end_date else 14
 
+            # Sprints 0 to 5 are 100% complete in VINCULOsync
+            is_sprint_done = (sprint.orden <= 5)
+            if is_sprint_done:
+                status_val = Tarea.Status.DONE
+                estado_excel = Tarea.EstadoExcel.COMPLETADO
+                completitud_pct = 100
+                criterios = [{"text": c["text"], "done": True} for c in criterios]
+            else:
+                status_val = Tarea.Status.BACKLOG
+
             # Create or update task
             tarea, created = Tarea.objects.update_or_create(
                 codigo=codigo,
@@ -429,6 +439,7 @@ def import_excel(
                     "sprint": sprint,
                     "area": area,
                     "titulo": titulo,
+                    "status": status_val,
                     "responsable": responsable,
                     "responsable_nombre": responsable_nombre,
                     "especificaciones_tecnicas": especs,
@@ -475,10 +486,15 @@ def import_excel(
                 dependencias_pendientes[codigo] = dependencias_raw
                 result.dependencias_fallidas += 1
 
-            # Check if blocked
-            tarea.check_blocked()
-            if tarea.is_blocked:
+            # Check if blocked (only for active or future sprints)
+            if tarea.sprint and tarea.sprint.orden <= 5:
+                tarea.is_blocked = False
+                tarea.blocked_reason = ""
                 tarea.save(update_fields=["is_blocked", "blocked_reason"])
+            else:
+                tarea.check_blocked()
+                if tarea.is_blocked:
+                    tarea.save(update_fields=["is_blocked", "blocked_reason"])
 
     # 5. Retry unresolved dependencies (cross-sheet references)
     if dependencias_pendientes:

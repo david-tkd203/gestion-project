@@ -77,16 +77,18 @@ class ChangePasswordView(APIView):
 
         return Response({"ok": True, "message": "Contrasena actualizada correctamente"})
 
-from .models import Proyecto, Sprint, Area, Tarea, Evento
+from .models import Proyecto, Sprint, Area, Tarea, Evento, Pendiente
 from .serializers import (
     ProyectoSerializer,
     SprintSerializer,
     AreaSerializer,
     TareaListSerializer,
     TareaDetailSerializer,
+    TareaCreateUpdateSerializer,
     TareaStatusUpdateSerializer,
     TareaAcceptanceUpdateSerializer,
     EventoSerializer,
+    PendienteSerializer,
 )
 from .services import import_excel
 
@@ -149,11 +151,12 @@ class ProyectoViewSet(viewsets.ModelViewSet):
                 pass
 
 
-class SprintViewSet(viewsets.ReadOnlyModelViewSet):
+class SprintViewSet(viewsets.ModelViewSet):
     serializer_class = SprintSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_fields = ["proyecto"]
+    search_fields = ["codigo", "nombre", "descripcion"]
     ordering = ["orden"]
 
     def get_queryset(self):
@@ -195,6 +198,8 @@ class TareaViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "retrieve":
             return TareaDetailSerializer
+        elif self.action in ("create", "update", "partial_update"):
+            return TareaCreateUpdateSerializer
         return TareaListSerializer
 
     def get_queryset(self):
@@ -206,11 +211,6 @@ class TareaViewSet(viewsets.ModelViewSet):
     def update_status(self, request, pk=None):
         """Move task to new status with blocked check."""
         tarea = self.get_object()
-        if not request.user.profile.is_admin and tarea.responsable != request.user:
-            return Response(
-                {"detail": "Solo el responsable o un administrador pueden cambiar el estado"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         serializer = TareaStatusUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tarea = serializer.update(tarea, serializer.validated_data)
@@ -220,11 +220,6 @@ class TareaViewSet(viewsets.ModelViewSet):
     def toggle_acceptance(self, request, pk=None):
         """Toggle an acceptance criterion check."""
         tarea = self.get_object()
-        if not request.user.profile.is_admin and tarea.responsable != request.user:
-            return Response(
-                {"detail": "Solo el responsable o un administrador pueden modificar criterios"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         serializer = TareaAcceptanceUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tarea = serializer.update(tarea, serializer.validated_data)
@@ -302,3 +297,15 @@ class EventoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Evento.objects.select_related("sprint").all()
+
+
+class PendienteViewSet(viewsets.ModelViewSet):
+    queryset = Pendiente.objects.select_related("proyecto", "responsable").all()
+    serializer_class = PendienteSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["proyecto", "tipo", "estado", "prioridad"]
+    search_fields = ["titulo", "institucion", "persona_contacto", "temas_tratados"]
+    ordering_fields = ["fecha", "prioridad", "created_at", "estado"]
+    ordering = ["-fecha", "-created_at"]
+

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Proyecto, Sprint, Area, Tarea, Evento
+from .models import Proyecto, Sprint, Area, Tarea, Evento, Pendiente
 
 
 class ProyectoSerializer(serializers.ModelSerializer):
@@ -94,3 +94,35 @@ class EventoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evento
         fields = "__all__"
+
+
+class TareaCreateUpdateSerializer(serializers.ModelSerializer):
+    area = serializers.PrimaryKeyRelatedField(
+        queryset=Area.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Tarea
+        fields = "__all__"
+
+    def create(self, validated_data):
+        if not validated_data.get("area"):
+            area, _ = Area.objects.get_or_create(
+                codigo="GEN", defaults={"nombre": "General", "color": "#6366f1"}
+            )
+            validated_data["area"] = area
+        return super().create(validated_data)
+
+
+class PendienteSerializer(serializers.ModelSerializer):
+    proyecto_nombre = serializers.CharField(source="proyecto.nombre", read_only=True)
+    tipo_display = serializers.CharField(source="get_tipo_display", read_only=True)
+    estado_display = serializers.CharField(source="get_estado_display", read_only=True)
+    prioridad_display = serializers.CharField(source="get_prioridad_display", read_only=True)
+
+    class Meta:
+        model = Pendiente
+        fields = "__all__"
+

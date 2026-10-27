@@ -306,3 +306,56 @@ class Evento(models.Model):
 
     class Meta:
         ordering = ["fecha"]
+
+
+class Pendiente(models.Model):
+    class Tipo(models.TextChoices):
+        REUNION = "reunion", "Reunión"
+        INSTITUCION = "institucion", "Gestión con Institución"
+        PERSONA = "persona", "Reunión con Persona / Stakeholder"
+        COMPROMISO = "compromiso", "Compromiso / Acuerdo"
+        PROYECTO = "proyecto", "Hito de Proyecto"
+
+    class Estado(models.TextChoices):
+        PENDIENTE = "pendiente", "Pendiente"
+        EN_GESTION = "en_gestion", "En Gestión"
+        COMPLETADO = "completado", "Completado"
+
+    class Prioridad(models.TextChoices):
+        ALTA = "alta", "Alta"
+        MEDIA = "media", "Media"
+        BAJA = "baja", "Baja"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    proyecto = models.ForeignKey(
+        Proyecto, on_delete=models.SET_NULL, null=True, blank=True, related_name="pendientes"
+    )
+    titulo = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=Tipo.choices, default=Tipo.REUNION)
+    institucion = models.CharField(max_length=255, blank=True, default="")
+    persona_contacto = models.CharField(max_length=255, blank=True, default="")
+    fecha = models.DateField(null=True, blank=True)
+    hora = models.TimeField(null=True, blank=True)
+    lugar_o_link = models.CharField(max_length=500, blank=True, default="")
+    temas_tratados = models.TextField(blank=True, default="", help_text="Minuta / temas tratados")
+    acuerdos = models.JSONField(
+        default=list, blank=True,
+        help_text="Lista de acuerdos [{text: str, done: bool, responsable: str}]"
+    )
+    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE)
+    prioridad = models.CharField(max_length=10, choices=Prioridad.choices, default=Prioridad.MEDIA)
+    responsable = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="pendientes_asignados"
+    )
+    responsable_nombre = models.CharField(max_length=255, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-fecha", "-created_at"]
+        verbose_name = "Pendiente / Reunión"
+        verbose_name_plural = "Pendientes / Reuniones"
+
+    def __str__(self):
+        return f"[{self.get_tipo_display()}] {self.titulo}"
+

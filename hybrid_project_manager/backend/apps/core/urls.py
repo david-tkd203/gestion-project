@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     ProyectoViewSet, SprintViewSet, TareaViewSet,
-    AreaViewSet, EventoViewSet, MeView, ChangePasswordView,
+    AreaViewSet, EventoViewSet, PendienteViewSet, MeView, ChangePasswordView,
 )
 
 router = DefaultRouter()
@@ -11,6 +11,7 @@ router.register(r"sprints", SprintViewSet, basename="sprint")
 router.register(r"tareas", TareaViewSet, basename="tarea")
 router.register(r"areas", AreaViewSet, basename="area")
 router.register(r"eventos", EventoViewSet, basename="evento")
+router.register(r"pendientes", PendienteViewSet, basename="pendiente")
 
 urlpatterns = [
     path("me/", MeView.as_view(), name="me"),

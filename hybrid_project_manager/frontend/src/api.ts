@@ -58,6 +58,15 @@ export const getSprints = (proyectoId?: string) =>
   request<any[]>('/sprints/' + (proyectoId ? `?proyecto=${proyectoId}` : ''))
     .then((r: any) => r.results || r);
 
+export const createSprint = (data: Record<string, any>) =>
+  request<any>('/sprints/', { method: 'POST', body: JSON.stringify(data) });
+
+export const updateSprint = (id: string, data: Record<string, any>) =>
+  request<any>(`/sprints/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+
+export const deleteSprint = (id: string) =>
+  request<any>(`/sprints/${id}/`, { method: 'DELETE' });
+
 export const getSprintStatus = (id: string) =>
   request<any>(`/dashboard/sprint-status/${id}/`);
 
@@ -114,11 +123,30 @@ export const updateCriterios = (id: string, criterios: any[]) =>
     body: JSON.stringify({ criterios_aceptacion: criterios }),
   });
 
+export const createTarea = (data: Record<string, any>) =>
+  request<any>('/tareas/', { method: 'POST', body: JSON.stringify(data) });
+
 export const updateTarea = (id: string, data: Record<string, any>) =>
   request<any>(`/tareas/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
+
+export const deleteTarea = (id: string) =>
+  request<any>(`/tareas/${id}/`, { method: 'DELETE' });
+
+// ─── Pendientes y Reuniones ───
+export const getPendientes = (params?: string) =>
+  request<any>('/pendientes/' + (params || '')).then((r: any) => r.results || r);
+
+export const createPendiente = (data: Record<string, any>) =>
+  request<any>('/pendientes/', { method: 'POST', body: JSON.stringify(data) });
+
+export const updatePendiente = (id: string, data: Record<string, any>) =>
+  request<any>(`/pendientes/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+
+export const deletePendiente = (id: string) =>
+  request<any>(`/pendientes/${id}/`, { method: 'DELETE' });
 
 // ─── GitHub ───
 export const getGithubConnection = (proyectoId: string) =>
