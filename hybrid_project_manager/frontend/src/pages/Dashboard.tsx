@@ -92,6 +92,7 @@ export default function Dashboard() {
       load();
     } catch (e: any) {
       setImportResult({ success: false, message: e.message });
+      setStep(4);
     }
     finally { setImporting(false); }
   };

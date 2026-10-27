@@ -23,7 +23,12 @@ async function request<T>(url: string, opts?: RequestInit): Promise<T> {
   if (res.status === 401) { logout(); throw new Error('Sesión expirada'); }
   if (!res.ok) {
     const text = await res.text().catch(() => 'Error');
-    throw new Error(text.slice(0, 300));
+    let message = text;
+    try {
+      const parsed = JSON.parse(text);
+      message = parsed.error || parsed.detail || (typeof parsed === 'string' ? parsed : text);
+    } catch {}
+    throw new Error(message.slice(0, 300));
   }
   return res.json();
 }

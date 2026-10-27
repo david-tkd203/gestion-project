@@ -212,30 +212,44 @@ def _resolve_dependency(
 
 
 @transaction.atomic
-def import_excel(file_path: str, proyecto_nombre: str = "VINCULOsync") -> ImportResult:
+def import_excel(
+    file_path: str,
+    proyecto_nombre: str = "VINCULOsync",
+    proyecto: Proyecto | None = None,
+) -> ImportResult:
     """
     Main entry point. Parses the Excel workbook, creates/updates
     Proyecto, Sprints, Areas, and Tareas with dependency graph.
     """
     result = ImportResult()
-    wb = openpyxl.load_workbook(file_path, data_only=True)
+    try:
+        wb = openpyxl.load_workbook(file_path, data_only=True)
+    except Exception as e:
+        logger.exception("Failed to load Excel workbook: %s", e)
+        raise ValueError(f"No se pudo abrir el archivo Excel: {e}")
 
-    # 1. Get or create Proyecto
-    proyecto, _ = Proyecto.objects.get_or_create(
-        nombre=proyecto_nombre,
-        defaults={"budget": 812500.00},
-    )
+    # 1. Resolve Proyecto cleanly (avoid MultipleObjectsReturned)
+    if proyecto is None:
+        if isinstance(proyecto_nombre, Proyecto):
+            proyecto = proyecto_nombre
+        else:
+            proyecto = Proyecto.objects.filter(nombre__iexact=str(proyecto_nombre)).first()
+            if not proyecto:
+                proyecto = Proyecto.objects.create(nombre=str(proyecto_nombre), budget=812500.00)
     result.proyecto_id = str(proyecto.id)
 
-    # 2. Parse Leyenda → Sprints + Areas
-    if "Leyenda" in wb.sheetnames:
-        ws = wb["Leyenda"]
-        sprint_defs = {}
-        area_defs = {}
+    # 2. Parse Leyenda → Sprints + Areas (tolerant of casing and missing sheets)
+    sprint_defs = {}
+    area_defs = {}
+    leyenda_sheet = next((s for s in wb.sheetnames if s.strip().lower() == "leyenda"), None)
+    if leyenda_sheet:
+        ws = wb[leyenda_sheet]
         parsing_sprints = False
         parsing_areas = False
         for row in ws.iter_rows(min_row=1, max_row=ws.max_row, values_only=True):
             vals = [str(v).strip() if v is not None else "" for v in row]
+            if not vals:
+                continue
             if "SPRINTS" in vals[0].upper():
                 parsing_sprints = True
                 parsing_areas = False
@@ -244,16 +258,25 @@ def import_excel(file_path: str, proyecto_nombre: str = "VINCULOsync") -> Import
                 parsing_sprints = False
                 parsing_areas = True
                 continue
-            if parsing_sprints and vals[0] and vals[1] and vals[2] and vals[1].startswith("SP"):
+            if parsing_sprints and len(vals) > 3 and vals[0] and vals[1] and vals[2] and vals[1].startswith("SP"):
                 # Sprint | Código | Duración | Descripción | Tareas | Color
                 sprint_defs[vals[1]] = {
                     "nombre": vals[0],
                     "duracion": vals[2],
                     "descripcion": vals[3],
                 }
-            if parsing_areas and vals[0] and vals[1] and vals[0] not in ("Prefijo", "Tipo", "ESTRUCTURA DEL CÓDIGO"):
+            if parsing_areas and len(vals) > 1 and vals[0] and vals[1] and vals[0] not in ("Prefijo", "Tipo", "ESTRUCTURA DEL CÓDIGO"):
                 area_defs[vals[0]] = {"nombre": vals[1]}
         logger.info("Parsed %d sprint defs, %d area defs", len(sprint_defs), len(area_defs))
+
+    # Fallback if Leyenda had no sprints
+    if not sprint_defs:
+        for i in range(8):
+            sprint_defs[f"SP{i}"] = {
+                "nombre": f"Sprint {i}",
+                "duracion": "",
+                "descripcion": "",
+            }
 
     # 3. Parse sprint sheets → create Sprints + Tareas
     #    Build a codigo→task map for dependency resolution
@@ -262,7 +285,7 @@ def import_excel(file_path: str, proyecto_nombre: str = "VINCULOsync") -> Import
 
     # 3a. First pass: create Sprints from the Legend definitions
     for codigo, sdef in sprint_defs.items():
-        start, end = parse_duration_range(sdef["duracion"])
+        start, end = parse_duration_range(sdef.get("duracion", ""))
         if not start:
             start = datetime.date(2026, 1, 1)
         if not end:
@@ -272,8 +295,8 @@ def import_excel(file_path: str, proyecto_nombre: str = "VINCULOsync") -> Import
             proyecto=proyecto,
             codigo=codigo,
             defaults={
-                "nombre": sdef["nombre"],
-                "descripcion": sdef["descripcion"],
+                "nombre": sdef.get("nombre", f"Sprint {orden}"),
+                "descripcion": sdef.get("descripcion", ""),
                 "fecha_inicio": start,
                 "fecha_fin": end,
                 "orden": orden,
@@ -291,13 +314,13 @@ def import_excel(file_path: str, proyecto_nombre: str = "VINCULOsync") -> Import
 
     # 3b. Parse each task sheet
     sheet_sprint_map = {}
-    for sheet_name in SPRINT_SHEET_MAP:
-        sprint_code = SPRINT_SHEET_MAP[sheet_name]
-        if sheet_name not in wb.sheetnames:
-            logger.warning("Sheet %s not found", sheet_name)
+    for target_name, sprint_code in SPRINT_SHEET_MAP.items():
+        matched_sheet = next((s for s in wb.sheetnames if s.strip().lower() == target_name.lower()), None)
+        if not matched_sheet:
+            logger.warning("Sheet %s not found in workbook", target_name)
             continue
-        sheet_sprint_map[sheet_name] = sprint_code
-        ws = wb[sheet_name]
+        sheet_sprint_map[matched_sheet] = sprint_code
+        ws = wb[matched_sheet]
         sprint = sprint_instances.get(sprint_code)
         if not sprint:
             continue

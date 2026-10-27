@@ -120,7 +120,7 @@ class ProyectoViewSet(viewsets.ModelViewSet):
             tmp_path = tmp.name
 
         try:
-            result = import_excel(tmp_path, proyecto_nombre=proyecto.nombre)
+            result = import_excel(tmp_path, proyecto=proyecto)
             if result.success:
                 return Response({
                     "message": str(result),
