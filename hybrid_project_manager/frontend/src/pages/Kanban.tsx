@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import anime from 'animejs';
-import { getSprints, getTareas, updateTareaStatus, deleteTarea } from '../api';
+import { getProyectos, getSprints, getTareas, updateTareaStatus, deleteTarea } from '../api';
 import { KanbanIcon, Lock, AlertTriangle, Loader2, Users, Plus, Edit3, Trash2, Calendar } from '../icons';
 import TaskModal from '../components/TaskModal';
 import SprintModal from '../components/SprintModal';
@@ -36,12 +36,9 @@ export default function Kanban() {
     setLoading(true);
     setError('');
     try {
-      const projsResp = await fetch('/api/proyectos/', {
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('access_token') }
-      });
-      const projs = await projsResp.json();
-      const projList = projs.results || projs || [];
-      const firstProj = projList.find((p: any) => p.nombre?.toLowerCase().includes('vinculo')) || projList[0];
+      const projList = await getProyectos();
+      const list = Array.isArray(projList) ? projList : [];
+      const firstProj = list.find((p: any) => p.nombre?.toLowerCase().includes('vinculo')) || list[0];
       if (firstProj) setProjectId(firstProj.id);
 
       const [s, t] = await Promise.all([

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import anime from 'animejs';
-import { getSprints, getTareas } from '../api';
+import { getProyectos, getSprints, getTareas } from '../api';
 import { Calendar, Users, GitBranch, Shield, FileText, KanbanIcon, LayoutDashboard, Loader2, CheckCircle } from '../icons';
 import TaskDetailModal from '../components/TaskDetailModal';
 
@@ -25,10 +25,11 @@ export default function SprintFlow() {
 
   useEffect(() => {
     (async () => {
-      const projsResp = await fetch('/api/proyectos/', { headers: { Authorization: 'Bearer ' + localStorage.getItem('access_token') } });
-      const projs = await projsResp.json();
-      const projList = projs.results || projs || [];
-      const firstProj = projList.find((p: any) => p.nombre?.toLowerCase().includes('vinculo')) || projList[0];
+      const projList = await getProyectos();
+      const list = Array.isArray(projList) ? projList : [];
+
+
+      const firstProj = list.find((p: any) => p.nombre?.toLowerCase().includes('vinculo')) || list[0];
       const [s, t] = await Promise.all([
         firstProj ? getSprints(firstProj.id) : getSprints(),
         firstProj ? getTareas(`?proyecto=${firstProj.id}`) : getTareas()

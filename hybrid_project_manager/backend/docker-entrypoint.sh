@@ -13,19 +13,6 @@ while ! nc -z "${REDIS_HOST:-redis}" "${REDIS_PORT:-6379}" 2>/dev/null; do
 done
 echo "✅ Redis is ready"
 
-# ─── Auto-migration ───
-echo "🗃️  Running migrate..."
-python manage.py migrate --noinput
-
-echo "👤 Seeding initial users..."
-python manage.py seed_users || true
-
-echo "🚀 Setting up VINCULOsync project..."
-python manage.py setup_vinculosync || true
-
-echo "📂 Collecting static files..."
-python manage.py collectstatic --noinput --clear 2>/dev/null || true
-
 # ─── Pick the right server based on WORKER_TYPE ───
 if [ "$WORKER_TYPE" = "celery" ]; then
   echo "⚡ Starting Celery worker..."
@@ -34,6 +21,19 @@ elif [ "$WORKER_TYPE" = "beat" ]; then
   echo "⏰ Starting Celery beat..."
   exec celery -A config beat -l INFO
 else
+  # ─── Web Backend Initialization ───
+  echo "🗃️  Running migrate..."
+  python manage.py migrate --noinput
+
+  echo "👤 Seeding initial users..."
+  python manage.py seed_users || true
+
+  echo "🚀 Setting up VINCULOsync project..."
+  python manage.py setup_vinculosync
+
+  echo "📂 Collecting static files..."
+  python manage.py collectstatic --noinput --clear 2>/dev/null || true
+
   echo "🚀 Starting Django (ASGI via Daphne) on 0.0.0.0:8000..."
   exec daphne -b 0.0.0.0 -p 8000 config.asgi:application
 fi

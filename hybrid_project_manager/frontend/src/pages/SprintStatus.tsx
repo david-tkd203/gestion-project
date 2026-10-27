@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import anime from 'animejs';
-import { getSprints, getSprintStatus } from '../api';
+import { getProyectos, getSprints, getSprintStatus } from '../api';
 import { TrendingUp, AlertTriangle, Lock, CheckCircle, Loader2 } from '../icons';
 
 function useCountUp(target: number, deps: unknown[] = []) {
@@ -40,10 +40,11 @@ export default function SprintStatus() {
 
   const loadSprints = useCallback(async () => {
     try {
-      const projsResp = await fetch('/api/proyectos/', { headers: { Authorization: 'Bearer ' + localStorage.getItem('access_token') } });
-      const projs = await projsResp.json();
-      const projList = projs.results || projs || [];
-      const firstProj = projList.find((p: any) => p.nombre?.toLowerCase().includes('vinculo')) || projList[0];
+      const projList = await getProyectos();
+      const list = Array.isArray(projList) ? projList : [];
+
+
+      const firstProj = list.find((p: any) => p.nombre?.toLowerCase().includes('vinculo')) || list[0];
       const s = firstProj ? await getSprints(firstProj.id) : await getSprints();
       setSprints(s);
       if (!id && s.length > 0) setSelected(s[0].id);

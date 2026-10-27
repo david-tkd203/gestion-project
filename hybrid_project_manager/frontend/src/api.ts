@@ -42,7 +42,7 @@ export const login = (user: string, pass: string) =>
 
 // ─── Proyectos ───
 export const getProyectos = () =>
-  request<{ results: any[]; count: number }>('/proyectos/').then(r => r.results);
+  request<any>('/proyectos/').then((r: any) => (Array.isArray(r) ? r : r.results || []));
 
 export const createProyecto = (nombre: string) =>
   request<any>('/proyectos/', { method: 'POST', body: JSON.stringify({ nombre }) });

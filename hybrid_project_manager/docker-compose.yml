@@ -3,6 +3,8 @@
 # PostgreSQL 16 + Redis 7 + Django (ASGI) + Celery + Frontend
 # ──────────────────────────────────────────────────────────
 
+name: hybrid_pm
+
 x-backend-env: &backend-env
   DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-secret-change-in-prod}
   DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
@@ -110,5 +112,8 @@ services:
 
 volumes:
   pgdata:
+    name: hybrid_pm_pgdata
   redisdata:
+    name: hybrid_pm_redisdata
   staticfiles:
+    name: hybrid_pm_staticfiles
