@@ -20,6 +20,9 @@ python manage.py migrate --noinput
 echo "👤 Seeding initial users..."
 python manage.py seed_users || true
 
+echo "🚀 Setting up VINCULOsync project..."
+python manage.py setup_vinculosync || true
+
 echo "📂 Collecting static files..."
 python manage.py collectstatic --noinput --clear 2>/dev/null || true
 

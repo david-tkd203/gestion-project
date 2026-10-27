@@ -19,6 +19,9 @@ media/
 .env
 !.env.example
 
+# ─── Data Fixtures ───
+!backend/data/*.xlsx
+
 # ─── Node ───
 node_modules/
 frontend/dist/
